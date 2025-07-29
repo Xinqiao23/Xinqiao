@@ -1,0 +1,90 @@
+---
+title: "submission2"
+author: "Xinqiao Li"
+date: "2025-07-28"
+output: html_document
+---
+```{r}
+#task1
+library(ggplot2)
+library(tidyverse)
+
+plot_gene_expression <- function(data, gene_list, cont_cov, cat_cov1, cat_cov2) {
+  for (gene in gene_list) {
+    if (!gene %in% colnames(data)) {
+      message(paste("Gene", gene, "not found. Skipping."))
+      next
+    }
+
+    # histogram
+    hist_plot <- ggplot(data, aes_string(x = gene)) +
+      geom_histogram(binwidth = 0.1, fill = "lightblue", color = "black", alpha = 0.7) +
+      labs(
+        title = paste("Histogram of", gene, "Expression"),
+        x = paste(gene, "Expression"),
+        y = "Count"
+      ) +
+      theme_minimal()
+    print(hist_plot)
+
+    
+    # scatterplot
+    scatter <- ggplot(data, aes_string(x = cont_cov, y = gene)) +
+      geom_point(color = "darkgreen", alpha = 0.7) +
+      labs(
+        title = paste("Scatterplot of", gene, "vs", cont_cov),
+        x = cont_cov,
+        y = paste(gene, "Expression")
+      ) +
+      theme_minimal()
+    print(scatter)
+
+    # boxplot 
+    combined_box <- ggplot(data, aes_string(x = cat_cov1, y = gene, fill = cat_cov2)) +
+      geom_boxplot(alpha = 0.7) +
+      labs(
+        title = paste("Boxplot of", gene, "by", cat_cov1, "and", cat_cov2),
+        x = cat_cov1,
+        y = paste(gene, "Expression")
+      ) +
+      theme_minimal()
+    print(combined_box)
+  }
+}
+
+```
+
+```{r}
+# task2 
+library(ggplot2)
+library(tidyverse)
+
+setwd("/Users/zaozao/Desktop/Xinqiao")
+gene_expression <- read.csv("QBS103_GSE157103_genes.csv", row.names = 1, check.names = FALSE)
+meta <- read.csv("QBS103_GSE157103_series_matrix-1.csv", check.names = FALSE)
+
+
+selected_genes <- c("AASS", "ABCD1", "ABI2")
+expr_data <- as.data.frame(t(gene_expression[selected_genes, ]))
+colnames(expr_data) <- selected_genes
+expr_data$participant_id <- rownames(expr_data)
+
+meta$participant_id <- as.character(meta[[1]])
+full_data <- merge(meta, expr_data, by = "participant_id")
+full_data$age <- as.numeric(as.character(full_data$age))
+
+full_data <- full_data[full_data$icu_status != "_id", ]
+
+# making plot
+plot_gene_expression(
+  data = full_data,
+  gene_list = selected_genes,
+  cont_cov = "age",
+  cat_cov1 = "sex",
+  cat_cov2 = "icu_status"
+)
+
+
+
+```
+
